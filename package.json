@@ -1,0 +1,14 @@
+{
+  "name": "stripe-checkout-starter",
+  "version": "1.0.0",
+  "description": "Plăți Stripe Checkout (unice + abonamente) cu webhook-uri verificate prin semnătură — Node.js, fără dependențe.",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=.env server.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=20.6" },
+  "keywords": ["stripe", "checkout", "webhook", "payments", "subscriptions", "nodejs"],
+  "author": "Gabriel Dev <contact@gabrieldev.eu> (https://gabrieldev.eu)",
+  "license": "MIT"
+}

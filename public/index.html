@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stripe Checkout Starter</title>
+  <style>
+    :root { --bg: #0f1115; --card: #181b22; --text: #e8eaed; --muted: #9aa0a6; --accent: #635bff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 48px 16px; }
+    h1 { text-align: center; margin: 0 0 8px; }
+    p.lead { text-align: center; color: var(--muted); margin: 0 0 40px; }
+    .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); max-width: 900px; margin: 0 auto; }
+    .card { background: var(--card); border: 1px solid #262a33; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+    .price { font-size: 28px; font-weight: 700; }
+    .price small { font-size: 14px; color: var(--muted); font-weight: 400; }
+    button { margin-top: auto; background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 12px; font-size: 15px; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .notice { max-width: 900px; margin: 0 auto 24px; padding: 12px 16px; border-radius: 10px; background: #2a1f1f; display: none; }
+  </style>
+</head>
+<body>
+  <h1>Stripe Checkout Starter</h1>
+  <p class="lead">Plăți unice și abonamente, cu prețuri validate pe server și confirmare prin webhook.</p>
+  <div class="notice" id="notice"></div>
+  <div class="grid" id="grid"></div>
+  <script>
+    const fmt = (amount, currency) => new Intl.NumberFormat('ro-RO', { style: 'currency', currency }).format(amount / 100);
+    const notice = document.getElementById('notice');
+    if (new URLSearchParams(location.search).has('anulat')) { notice.textContent = 'Plata a fost anulată. Poți încerca din nou.'; notice.style.display = 'block'; }
+
+    fetch('/api/products').then(r => r.json()).then(products => {
+      document.getElementById('grid').innerHTML = Object.entries(products).map(([id, p]) => `
+        <div class="card">
+          <strong>${p.name}</strong>
+          <div class="price">${fmt(p.amount, p.currency)} ${p.recurring ? '<small>/ lună</small>' : ''}</div>
+          <button data-id="${id}">${p.recurring ? 'Abonează-te' : 'Plătește cu cardul'}</button>
+        </div>`).join('');
+    });
+
+    document.addEventListener('click', async e => {
+      const btn = e.target.closest('button[data-id]');
+      if (!btn) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ productId: btn.dataset.id }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        location.href = data.url;
+      } catch (err) {
+        notice.textContent = err.message; notice.style.display = 'block'; btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
